@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instapic</title>
+    <link rel="stylesheet" href="{% static "assets/bootstrap/css/bootstrap.min.css" %}">
+    <link rel="stylesheet" href="{% static "assets/fonts/font-awesome.min.css" %}">
+    <link rel="stylesheet" href="{% static "assets/css/Login-Form-Clean.css" %}">
+    <link rel="stylesheet" href="{% static "assets/css/styles.css" %}">
+    <link rel="stylesheet" href="{% static "assets/fonts/ionicons.min.css" %}">
+</head>
+
+<body>
+        <div class="photo-viewer">
+                <div class="img-div">
+                        <div class="header">
+                                <img class="img-circle" src="{{ ProfilePic }}"><label>/{{whosprofile}}</label></div>
+                                <img style="max-height: 500px" id="detailphoto" src="">
+                                <div class="header">
+                                        <a href="#"><i class="fa fa-heart-o"></i></a></div><div class="more-section"><label><span id="likes"></span> Likes</label>
+                                                <p><strong>/{{whosprofile}} </strong><span id="cap"></span></p>
+                                        </div>
+                                </div>
+        </div>
+        <div class="overlay"></div>
+        <div class="container-fluid header-top">
+            <div class="col-md-12" style="padding:0px;">
+                <div class="top-menu-logo"><a href="/"><img src="{% static "assets/img/logo.jpg" %}" class="center-block" style="height:40px;margin-top:10px;margin-bottom:10px;"></a>
+                </div>
+            </div>
+        </div>
+    <div class="container img-container">
+
+    </div>
+    <div class="container"><img class="img-circle center-block" id="profilepic" src="{{ ProfilePic }}" width="140" height="140">
+        <h1 class="text-center">{{ whosprofile }}</h1>
+        <div class="col-md-12 profile-imgs">
+            <div id="loadposts">
+            </div>
+        </div>
+    </div>
+    <script src="{% static "assets/js/jquery.min.js" %}"></script>
+    <script src="{% static "assets/bootstrap/js/bootstrap.min.js" %}"></script>
+    <script src={% static "assets/js/django-ajax.js" %}></script>
+    <script src="https://ucarecdn.com/libs/widget/3.0.0/uploadcare.min.js" charset="utf-8"></script>
+    <script src="{% static "assets/js/upload-sys.js" %}"></script>
+    <script type="text/javascript">
+            var start = 3;
+            $(document).ready(function() {
+                    $.ajax({
+                        type: "GET",
+                        url: "ajax-profile-feed?username={{whosprofile}}&start=0",
+                        processData: false,
+                        contentType: "application/json",
+                        data: '',
+                        success: function(r) {
+                                r = JSON.parse(r)
+                                for (var i = 0; i < r.length; i++) {
+                                        r[i].URL += '-/quality/lightest/'
+                                        $('#loadposts').append('<div class="photo" data-likes="'+r[i].Likes+'" data-caption="'+r[i].Caption+'" style="background-image:url('+r[i].URL+')"></div>')
+                                }
+                                $('.photo').each(function() {
+                                        $(this).click(function() {
+                                                $('#cap').html($(this).data('caption'))
+                                                if ($(this).data('caption') == "") {
+                                                        $('#cap').html("")
+                                                }
+                                                $('#likes').html($(this).data('likes'))
+                                                var s = $(this).css('background-image').split("url(\"")[1]
+                                                var tmpImg = new Image() ;
+                                                tmpImg.src = s.slice(0, s.length-21);
+                                                tmpImg.onload = function() {
+                                                $('#detailphoto').attr('src', tmpImg.src)
+                                                $('.photo-viewer').show()
+                                                $('#upload-div').hide()
+                                                $('.overlay').fadeToggle('fast')
+                                                $('body').css('overflow', 'hidden')
+                                                } ;
+                                })
+                                })
+                        },
+                        error: function(r) {
+
+                        }
+                });
+            })
+            var working = false;
+            $(window).scroll(function() {
+                 if ($(this).scrollTop() + 1 >= $('body').height() - $(window).height()) {
+                   if (working == false) {
+                           working = true;
+                   $.ajax({
+                       type: "GET",
+                       url: "ajax-profile-feed?username={{whosprofile}}&start="+start,
+                       processData: false,
+                       contentType: "application/json",
+                       data: '',
+                       success: function(r) {
+                               r = JSON.parse(r)
+                               for (var i = 0; i < r.length; i++) {
+                                       r[i].URL += '-/quality/lightest/'
+                                       $('#loadposts').append('<div class="photo" data-likes="'+r[i].Likes+'" data-caption="'+r[i].Caption+'" style="background-image:url('+r[i].URL+')"></div>')
+                               }
+                                start += 3;
+
+                                $('.photo').each(function() {
+                                        $(this).off('click')
+                                        $(this).click(function() {
+                                                $('#cap').html($(this).data('caption'))
+                                                if ($(this).data('caption') == "") {
+                                                        $('#cap').html("")
+                                                }
+                                                $('#likes').html($(this).data('likes'))
+                                                var s = $(this).css('background-image').split("url(\"")[1]
+                                                var tmpImg = new Image() ;
+                                                tmpImg.src = s.slice(0, s.length-21);
+                                                tmpImg.onload = function() {
+                                                $('#detailphoto').attr('src', tmpImg.src)
+                                                $('.photo-viewer').show()
+                                                $('#upload-div').hide()
+                                                $('.overlay').fadeToggle('fast')
+                                                $('body').css('overflow', 'hidden')
+                                                } ;
+
+                                })
+                                })
+                       },
+                       error: function(r) {
+
+                       }
+               });
+               setTimeout(function() {
+                working = false;
+                }, 4000)
+                }
+           }
+           });
+
+    </script>
+    </body>
+
+    </html>
